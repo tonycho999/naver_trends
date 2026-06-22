@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const { start, end } = getDefaultDates();
   document.getElementById('startDate').value = start;
   document.getElementById('endDate').value = end;
+  adjustEndDate('date'); // 초기값: 일별 기준으로 endDate 자동 조정
 
   // 카테고리 셀렉트 옵션 생성
   const sel = document.getElementById('categorySelect');
@@ -92,6 +93,26 @@ function updateLagNote(unit) {
     month: '💡 월별: 완료된 달 기준, 이번 달 데이터는 다음 달에 제공됩니다',
   };
   note.textContent = msgs[unit] || '';
+  // endDate를 단위에 맞게 자동 조정
+  adjustEndDate(unit);
+}
+
+// 네이버 DataLab 데이터 지연을 감안해 endDate 자동 조정
+function adjustEndDate(unit) {
+  const fmt = (d) => d.toISOString().slice(0, 10);
+  const d = new Date();
+  if (unit === 'date') {
+    d.setDate(d.getDate() - 3);      // 일별: 3일 전까지
+  } else if (unit === 'week') {
+    // 지난 월요일 (완료된 주)
+    const day = d.getDay(); // 0=일, 1=월 ...
+    d.setDate(d.getDate() - day - 6);
+  } else {
+    // 월별: 지난 달 말일
+    d.setDate(1);
+    d.setDate(d.getDate() - 1);
+  }
+  document.getElementById('endDate').value = fmt(d);
 }
 
 function updateUI() {
