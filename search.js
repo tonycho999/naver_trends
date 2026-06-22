@@ -25,8 +25,9 @@ const SHOPPING_CATEGORIES = [
 // ─── 날짜 기본값 (최근 12개월) ───────────────────────────────────────────────
 function getDefaultDates() {
   const end = new Date();
+  // 일별 기본: 최근 90일 (네이버 데이터 지연 감안)
   const start = new Date();
-  start.setFullYear(start.getFullYear() - 1);
+  start.setDate(start.getDate() - 90);
   const fmt = (d) => d.toISOString().slice(0, 10);
   return { start: fmt(start), end: fmt(end) };
 }
@@ -66,8 +67,32 @@ document.addEventListener('DOMContentLoaded', () => {
   // 키워드 추가 버튼
   document.getElementById('addKeywordBtn').addEventListener('click', addKeywordRow);
 
+  // timeUnit 토글
+  document.querySelectorAll('.unit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.unit-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateLagNote(btn.dataset.unit);
+    });
+  });
+
   updateUI();
 });
+
+function getTimeUnit() {
+  const active = document.querySelector('.unit-btn.active');
+  return active ? active.dataset.unit : 'date';
+}
+
+function updateLagNote(unit) {
+  const note = document.getElementById('lagNote');
+  const msgs = {
+    date:  '💡 일별: 약 2~3일 전 데이터까지 제공됩니다',
+    week:  '💡 주별: 완료된 주 기준, 최근 1~2주 지연될 수 있습니다',
+    month: '💡 월별: 완료된 달 기준, 이번 달 데이터는 다음 달에 제공됩니다',
+  };
+  note.textContent = msgs[unit] || '';
+}
 
 function updateUI() {
   const trendArea  = document.getElementById('trendArea');
@@ -140,7 +165,7 @@ async function runTrendSearch(mainKeyword, startDate, endDate) {
   const body = {
     startDate,
     endDate,
-    timeUnit: 'month',
+    timeUnit: getTimeUnit(),
     keywordGroups: allKeywords.map((kw) => ({ groupName: kw, keywords: [kw] })),
   };
 
@@ -177,7 +202,7 @@ async function runShoppingSearch(mainKeyword, startDate, endDate) {
         body: {
           startDate,
           endDate,
-          timeUnit: 'month',
+          timeUnit: getTimeUnit(),
           category: categoryCode,
           keyword: [{ name: kw, param: [kw] }],
           device: '',
