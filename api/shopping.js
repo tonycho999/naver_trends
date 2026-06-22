@@ -11,14 +11,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://openapi.naver.com/v1/datalab/shopping/keyword/trends', {
+    const { mode, body: requestBody } = req.body;
+
+    // mode: 'category' → 카테고리별 트렌드 비교
+    // mode: 'keyword'  → 카테고리 내 키워드(브랜드) 비교
+    const endpoint = mode === 'keyword'
+      ? 'https://openapi.naver.com/v1/datalab/shopping/category/keywords'
+      : 'https://openapi.naver.com/v1/datalab/shopping/categories';
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Naver-Client-Id': CLIENT_ID,
         'X-Naver-Client-Secret': CLIENT_SECRET,
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
@@ -30,6 +38,6 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    return res.status(500).json({ error: '서버 오류: ' + error.message });
   }
 }
