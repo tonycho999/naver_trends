@@ -47,14 +47,11 @@ function updatePlaceholder() {
 
   if (currentMode === 'trend') {
     input.placeholder = '키워드 입력 (예: 맥캘란)';
-    addBtn.style.display = 'inline-flex';
-    extraWrap.style.display = 'flex';
   } else {
-    input.placeholder = '쇼핑 카테고리 키워드 (예: 위스키)';
-    addBtn.style.display = 'none';
-    extraWrap.style.display = 'none';
-    extraWrap.innerHTML = '';
+    input.placeholder = '쇼핑 키워드 입력 (예: 맥캘란)';
   }
+  addBtn.style.display = 'inline-flex';
+  extraWrap.style.display = 'flex';
 }
 
 function addKeywordRow() {
@@ -138,14 +135,21 @@ async function runTrendSearch(mainKeyword, startDate, endDate) {
 
 // ─── 쇼핑인사이트 ───────────────────────────────────────────────────────────
 async function runShoppingSearch(keyword, startDate, endDate) {
+  // 쇼핑인사이트 키워드 트렌드 API: 키워드 그룹 형태로 전송
+  const extraInputs = document.querySelectorAll('.keyword-extra');
+  const allKeywords = [keyword];
+  extraInputs.forEach((inp) => {
+    if (inp.value.trim()) allKeywords.push(inp.value.trim());
+  });
+
   const body = {
     startDate,
     endDate,
     timeUnit: 'month',
-    category: [{ name: keyword, param: [keyword] }],
-    device: '',
-    gender: '',
-    ages: [],
+    keywordGroups: allKeywords.map((kw) => ({
+      groupName: kw,
+      keywords: [kw],
+    })),
   };
 
   const res = await fetch('/api/shopping', {
@@ -155,10 +159,13 @@ async function runShoppingSearch(keyword, startDate, endDate) {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.errorMessage || data.error || 'API 오류');
+  if (!res.ok) {
+    const msg = data.errorMessage || data.message || data.error || JSON.stringify(data);
+    throw new Error('쇼핑 API 오류: ' + msg);
+  }
 
-  renderShoppingChart(data, keyword);
-  renderShoppingTable(data);
+  renderShoppingChart(data, allKeywords);
+  renderShoppingTable(data, allKeywords);
 }
 
 // ─── 차트 렌더링 (트렌드) ────────────────────────────────────────────────────
@@ -191,21 +198,21 @@ function renderTrendChart(data, keywords) {
   document.getElementById('chartWrap').style.display = 'block';
 }
 
-function renderShoppingChart(data, keyword) {
+function renderShoppingChart(data, keywords) {
   const ctx = document.getElementById('resultChart').getContext('2d');
   if (chart) chart.destroy();
 
   const labels = data.results[0].data.map((d) => d.period.slice(0, 7));
-  const datasets = [{
-    label: keyword,
-    data: data.results[0].data.map((d) => d.ratio),
-    borderColor: PALETTE[0],
-    backgroundColor: PALETTE[0] + '22',
+  const datasets = data.results.map((result, i) => ({
+    label: keywords[i] || result.title,
+    data: result.data.map((d) => d.ratio),
+    borderColor: PALETTE[i % PALETTE.length],
+    backgroundColor: PALETTE[i % PALETTE.length] + '22',
     borderWidth: 2.5,
     pointRadius: 4,
     tension: 0.4,
-    fill: true,
-  }];
+    fill: false,
+  }));
 
   chart = new Chart(ctx, {
     type: 'line',
@@ -271,12 +278,23 @@ function renderTrendTable(data) {
   wrap.style.display = 'block';
 }
 
-function renderShoppingTable(data) {
+function renderShoppingTable(data, keywords) {
   const wrap = document.getElementById('tableWrap');
-  let html = '<table><thead><tr><th>기간</th><th>쇼핑 클릭 지수</th></tr></thead><tbody>';
+  const periods = data.results[0].data.map((d) => d.period.slice(0, 7));
 
-  data.results[0].data.forEach((d) => {
-    html += `<tr><td>${d.period.slice(0, 7)}</td><td>${d.ratio.toFixed(1)}</td></tr>`;
+  let html = '<table><thead><tr><th>기간</th>';
+  data.results.forEach((r, i) => {
+    html += `<th>${keywords[i] || r.title}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  periods.forEach((period, i) => {
+    html += `<tr><td>${period}</td>`;
+    data.results.forEach((r) => {
+      const val = r.data[i]?.ratio ?? '-';
+      html += `<td>${typeof val === 'number' ? val.toFixed(1) : val}</td>`;
+    });
+    html += '</tr>';
   });
 
   html += '</tbody></table>';
