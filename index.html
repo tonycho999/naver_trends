@@ -324,6 +324,29 @@
     }
 
     .badge strong { color: var(--accent2); }
+
+    .tab-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .cat-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      min-width: 180px;
+    }
+
+    .cat-select:focus { border-color: var(--accent); }
+    .cat-select option { background: #160d2e; }
   </style>
 </head>
 <body>
@@ -342,7 +365,23 @@
       <button class="tab-btn" data-mode="shopping">🛍️ 쇼핑 인사이트</button>
     </div>
 
-    <div class="input-row">
+    <!-- 트렌드 전용 안내 -->
+    <div id="trendArea">
+      <p class="tab-desc">네이버 전체 검색 기준 · 최대 5개 키워드 비교</p>
+    </div>
+
+    <!-- 쇼핑 전용 안내 + 카테고리 선택 -->
+    <div id="shoppingArea" style="display:none">
+      <p class="tab-desc">네이버 쇼핑 클릭 기준 · 카테고리를 먼저 선택하세요</p>
+      <div class="date-row" style="margin-top:12px">
+        <label>카테고리</label>
+        <select id="categorySelect" class="cat-select">
+          <option value="">-- 카테고리 선택 --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-row" style="margin-top:14px">
       <input type="text" id="keywordInput" placeholder="키워드 입력 (예: 맥캘란)" />
       <button class="btn-ghost" id="addKeywordBtn">+ 비교 키워드</button>
       <button class="btn-primary" id="searchBtn">검색</button>
@@ -355,11 +394,6 @@
       <input type="date" id="startDate" />
       <span>~</span>
       <input type="date" id="endDate" />
-    </div>
-
-    <div class="info-row">
-      <span class="badge">📈 트렌드: <strong>최대 5개 키워드 비교</strong></span>
-      <span class="badge">🛍️ 쇼핑: <strong>카테고리별 클릭량 추이</strong></span>
     </div>
 
     <div id="errorMsg"></div>
