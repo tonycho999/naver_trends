@@ -347,6 +347,43 @@
 
     .cat-select:focus { border-color: var(--accent); }
     .cat-select option { background: #160d2e; }
+
+    /* 단위 토글 */
+    .unit-toggle {
+      display: flex;
+      gap: 4px;
+      margin-left: 4px;
+    }
+
+    .unit-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 5px 10px;
+      transition: all 0.15s;
+    }
+
+    .unit-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .unit-btn:not(.active):hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    .data-lag-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      padding-left: 2px;
+    }
   </style>
 </head>
 <body>
@@ -394,7 +431,13 @@
       <input type="date" id="startDate" />
       <span>~</span>
       <input type="date" id="endDate" />
+      <div class="unit-toggle">
+        <button class="unit-btn active" data-unit="date">일별</button>
+        <button class="unit-btn" data-unit="week">주별</button>
+        <button class="unit-btn" data-unit="month">월별</button>
+      </div>
     </div>
+    <p class="data-lag-note" id="lagNote">💡 일별: 약 2~3일 전 데이터까지 제공됩니다</p>
 
     <div id="errorMsg"></div>
   </div>
