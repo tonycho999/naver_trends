@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://openapi.naver.com/v1/datalab/shopping/categories', {
+    const response = await fetch('https://openapi.naver.com/v1/datalab/shopping/keyword/trends', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
